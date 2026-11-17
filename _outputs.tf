@@ -20,17 +20,17 @@
 ## ----------------------------------------------------------------------------
 
 output "endpoint" {
-  description = "Endpoint of the Service Bus namespace (null when disabled)"
+  description = "Endpoint of the Service Bus namespace (null when disabled or when an existing namespace is used)"
   value       = try(azurerm_servicebus_namespace.this[0].endpoint, null)
 }
 
 output "id" {
-  description = "Id of the Service Bus namespace (null when disabled)"
-  value       = try(azurerm_servicebus_namespace.this[0].id, null)
+  description = "Id of the Service Bus namespace: the one created by this module, or existing_namespace_id when that is set (null when disabled)"
+  value       = module.servicebus_context.enabled ? try(azurerm_servicebus_namespace.this[0].id, var.existing_namespace_id) : null
 }
 
 output "identity" {
-  description = "Identity of the Service Bus namespace (null when disabled)"
+  description = "Identity of the Service Bus namespace (null when disabled or when an existing namespace is used)"
   value       = try(azurerm_servicebus_namespace.this[0].identity, null)
 }
 

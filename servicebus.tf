@@ -28,9 +28,9 @@ module "servicebus_context" {
 }
 
 
-## Service Bus Namespace
+## Service Bus Namespace (not created when existing_namespace_id is set)
 resource "azurerm_servicebus_namespace" "this" {
-  count = module.servicebus_context.enabled ? 1 : 0
+  count = module.servicebus_context.enabled && var.existing_namespace_id == null ? 1 : 0
 
   capacity                      = var.capacity
   local_auth_enabled            = var.local_auth_enabled
@@ -90,12 +90,12 @@ resource "azurerm_servicebus_namespace" "this" {
 }
 
 
-## Service Bus Queues
+## Service Bus Queues (in the namespace created above, or in existing_namespace_id)
 resource "azurerm_servicebus_queue" "this" {
   for_each = module.servicebus_context.enabled ? var.queues : {}
 
   name                                    = each.key
-  namespace_id                            = azurerm_servicebus_namespace.this[0].id
+  namespace_id                            = try(azurerm_servicebus_namespace.this[0].id, var.existing_namespace_id)
   auto_delete_on_idle                     = each.value.auto_delete_on_idle
   batched_operations_enabled              = each.value.batched_operations_enabled
   dead_lettering_on_message_expiration    = each.value.dead_lettering_on_message_expiration
