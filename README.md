@@ -1,6 +1,6 @@
 # servicebus
 
-Creates an Azure Service Bus namespace and its queues, named and tagged through the SevenPico context module, exposing every azurerm_servicebus_namespace and azurerm_servicebus_queue argument.
+Creates an Azure Service Bus namespace and its queues, named and tagged through the SevenPico context module, exposing every azurerm_servicebus_namespace and azurerm_servicebus_queue argument. It can also create only queues in a Service Bus namespace that already exists (see Using an existing namespace).
 
 ## Requirements
 
@@ -13,9 +13,20 @@ Creates an Azure Service Bus namespace and its queues, named and tagged through 
 
 No SevenPico, SevenPicoForks or CloudPosse module exists for Azure Service Bus, so the module uses `azurerm_servicebus_namespace` and `azurerm_servicebus_queue` directly. Queue names are the keys of `queues`. The root context is declared in `_context.tf`; it and the child contexts use `git::https://github.com/raringgroup/terraform-null-context.git?ref=v0.1.0`.
 
+## Using an existing namespace
+
+The module has two modes, chosen by `existing_namespace_id`:
+
+| `existing_namespace_id` | What the module creates |
+|-------------------------|-------------------------|
+| `null` | The namespace and the queues in `queues`. |
+| A namespace resource ID | Only the queues in `queues`, in that namespace. No namespace is created, changed or destroyed. |
+
+In queues-only mode the namespace arguments (`resource_group_name`, `location`, `capacity`, `sku`, `identity`, `network_rule_set` and the rest) are ignored, so pass `null` for them. The `id` output returns the existing namespace ID; `endpoint` and `identity` are `null`, because the module does not read an existing namespace. The ID is validated to be a `Microsoft.ServiceBus/namespaces` resource ID. Queue names are the keys of `queues` in both modes, and the identity running Terraform needs permission to create queues in the existing namespace.
+
 ## Naming
 
-Namespace names are 6 to 50 characters: letters, digits and hyphens, starting with a letter and ending with a letter or digit. They must be globally unique. Queue names are not generated: they are the keys of `queues` and must be 1 to 260 characters (letters, digits, periods, hyphens, underscores and slashes), starting and ending with a letter or digit.
+Namespace names (used only when the module creates the namespace) are 6 to 50 characters: letters, digits and hyphens, starting with a letter and ending with a letter or digit. They must be globally unique. Queue names are not generated: they are the keys of `queues` and must be 1 to 260 characters (letters, digits, periods, hyphens, underscores and slashes), starting and ending with a letter or digit.
 
 ## Inputs
 
@@ -25,6 +36,7 @@ Every azurerm argument is an input and every input is required (no defaults): pa
 |------|------|-------------|
 | resource_group_name | `string` | The name of the resource group in which to create the Service Bus namespace. Changing this forces a new resource to be created. |
 | location | `string` | Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created. |
+| existing_namespace_id | `string` | The ID of an existing Service Bus namespace. When set, the module creates only the queues, in that namespace, and does not create a namespace; the namespace arguments are then ignored and can be null. When null, the module creates the namespace and the queues. |
 | capacity | `number` | Specifies the capacity. When sku is Premium, capacity can be 1, 2, 4, 8 or 16. When sku is Basic or Standard, capacity can be 0 only. |
 | local_auth_enabled | `bool` | Whether or not SAS authentication is enabled for the Service Bus namespace. Defaults to true. |
 | minimum_tls_version | `string` | The minimum supported TLS version for this Service Bus Namespace. Possible values are 1.2 and 1.3. Defaults to 1.2. |
@@ -41,9 +53,9 @@ Every azurerm argument is an input and every input is required (no defaults): pa
 
 | Name | Description |
 |------|-------------|
-| endpoint | Namespace endpoint (null when disabled) |
-| id | Namespace ID (null when disabled) |
-| identity | Namespace managed identity, including principal and tenant IDs (null when disabled) |
+| endpoint | Namespace endpoint (null when disabled or when an existing namespace is used) |
+| id | Namespace ID: the one this module creates, or existing_namespace_id when that is set (null when disabled) |
+| identity | Namespace managed identity, including principal and tenant IDs (null when disabled or when an existing namespace is used) |
 | queue_ids | Map of queue name to queue ID |
 
 Namespace shared access keys and connection strings are deliberately not output.
@@ -52,7 +64,7 @@ Namespace shared access keys and connection strings are deliberately not output.
 
 ```hcl
 terraform {
-  source = "git::<repo-url>//modules/servicebus?ref=servicebus-v<version>"
+  source = "git::https://github.com/raringgroup/terraform-azurerm-servicebus.git?ref=develop"
 }
 
 inputs = {
@@ -64,12 +76,46 @@ inputs = {
 
   resource_group_name           = "<value>"
   location                      = "<value>"
+  existing_namespace_id         = null
   capacity                      = null
   local_auth_enabled            = null
   minimum_tls_version           = null
   premium_messaging_partitions  = null
   public_network_access_enabled = null
   sku                           = "<value>"
+  customer_managed_key          = null
+  identity                      = null
+  network_rule_set              = null
+  timeouts                      = null
+
+  queues = {
+    "<queue-name>" = {
+      max_delivery_count = 10
+    }
+  }
+}
+```
+
+Queues only, in an existing namespace:
+
+```hcl
+inputs = {
+  enabled     = true
+  namespace   = "<namespace>"
+  environment = "<environment>"
+  name        = "<name>"
+
+  existing_namespace_id = "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.ServiceBus/namespaces/<namespace-name>"
+
+  # Namespace arguments are ignored in this mode
+  resource_group_name           = null
+  location                      = null
+  capacity                      = null
+  local_auth_enabled            = null
+  minimum_tls_version           = null
+  premium_messaging_partitions  = null
+  public_network_access_enabled = null
+  sku                           = null
   customer_managed_key          = null
   identity                      = null
   network_rule_set              = null

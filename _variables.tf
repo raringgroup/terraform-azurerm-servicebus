@@ -29,6 +29,16 @@ variable "location" {
   description = "Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created."
 }
 
+variable "existing_namespace_id" {
+  type        = string
+  description = "The ID of an existing Service Bus namespace. When set, the module creates only the queues, in that namespace, and does not create a namespace; the namespace arguments (resource_group_name, location, capacity, sku and so on) are then ignored and can be null. When null, the module creates the namespace and the queues."
+
+  validation {
+    condition     = var.existing_namespace_id == null || can(regex("(?i)^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft.ServiceBus/namespaces/[^/]+$", var.existing_namespace_id))
+    error_message = "existing_namespace_id must be a Service Bus namespace resource ID, for example /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.ServiceBus/namespaces/<name>."
+  }
+}
+
 variable "capacity" {
   type        = number
   description = "Specifies the capacity. When sku is Premium, capacity can be 1, 2, 4, 8 or 16. When sku is Basic or Standard, capacity can be 0 only."
