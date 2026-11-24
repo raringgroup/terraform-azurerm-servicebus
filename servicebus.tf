@@ -14,9 +14,9 @@
 ## limitations under the License.
 ## ----------------------------------------------------------------------------
 ##
-##  modules/servicebus/servicebus.tf
+##  servicebus.tf
 ##
-##  Creates an Azure Service Bus namespace and its queues, named and tagged through the SevenPico context module, exposing every azurerm_servicebus_namespace and azurerm_servicebus_queue argument.
+##  Creates an Azure Service Bus namespace and its queues, named and tagged through the Raring Group context module, exposing every azurerm_servicebus_namespace and azurerm_servicebus_queue argument.
 ## ----------------------------------------------------------------------------
 
 ## Service Bus Context

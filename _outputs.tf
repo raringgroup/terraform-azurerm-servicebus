@@ -14,7 +14,7 @@
 ## limitations under the License.
 ## ----------------------------------------------------------------------------
 ##
-##  modules/servicebus/_outputs.tf
+##  _outputs.tf
 ##
 ##  Output values for the servicebus module.
 ## ----------------------------------------------------------------------------

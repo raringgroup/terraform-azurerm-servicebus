@@ -14,7 +14,7 @@
 ## limitations under the License.
 ## ----------------------------------------------------------------------------
 ##
-##  modules/servicebus/_variables.tf
+##  _variables.tf
 ##
 ##  Input variables for the servicebus module.
 ## ----------------------------------------------------------------------------
